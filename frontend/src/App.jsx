@@ -1,96 +1,101 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import './App.css'
-
-/**
- * SmartLab Equipment Manager — CADMech Assessment
- *
- * TODO: Build your solution here!
- *
- * Required Features:
- * 1. Dashboard with summary statistics
- * 2. Equipment list (table/grid view)
- * 3. Add new equipment (form)
- * 4. Edit equipment
- * 5. Delete equipment (with confirmation)
- * 6. Search & Filter (by name, type, status)
- * 7. Responsive design
- *
- * API Base URL (development): http://localhost:5000/api
- * API Base URL (production):  Replace with your deployed backend URL
- *
- * Hints:
- * - Create separate components in the /components folder
- * - Use fetch() or axios to communicate with the backend
- * - Consider using React Router for navigation (optional)
- * - Add loading states while fetching data
- */
-
-// TODO: Update this to your deployed backend URL before deploying frontend
-const API_BASE = '/api'
+import Dashboard from './components/Dashboard'
+import SearchFilterBar from './components/SearchFilterBar'
+import EquipmentList from './components/EquipmentList'
+import EquipmentForm from './components/EquipmentForm'
+import { getEquipment, getTypes, createEquipment, updateEquipment, deleteEquipment } from './api'
 
 function App() {
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [types, setTypes] = useState([])
+
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('')
+  const [type, setType] = useState('')
+
+  const [showForm, setShowForm] = useState(false)
+  const [editingItem, setEditingItem] = useState(null)
+  const [errorMsg, setErrorMsg] = useState('')
+
+  const fetchEquipment = useCallback(() => {
+    setLoading(true)
+    getEquipment({ search, status, type })
+      .then((res) => setItems(res.data))
+      .catch((err) => {
+        console.error('Failed to fetch equipment:', err)
+        setErrorMsg('Could not load equipment. Is the backend running?')
+      })
+      .finally(() => setLoading(false))
+  }, [search, status, type])
+
+  useEffect(() => {
+    getTypes().then((res) => setTypes(res.types)).catch(console.error)
+  }, [])
+
+  useEffect(() => {
+    const timer = setTimeout(fetchEquipment, 400)
+    return () => clearTimeout(timer)
+  }, [fetchEquipment])
+
+  const handleAddClick = () => { setEditingItem(null); setShowForm(true) }
+  const handleEditClick = (item) => { setEditingItem(item); setShowForm(true) }
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this equipment item?')) return
+    try {
+      await deleteEquipment(id)
+      fetchEquipment()
+    } catch (err) {
+      console.error('Failed to delete:', err)
+      setErrorMsg(err.message)
+    }
+  }
+
+  const handleFormSubmit = async (formData) => {
+    if (editingItem) await updateEquipment(editingItem.id, formData)
+    else await createEquipment(formData)
+    setShowForm(false)
+    fetchEquipment()
+  }
+
   return (
     <div className="app">
       <header className="app-header">
         <div className="header-content">
-          <h1>🏭 SmartLab Equipment Manager</h1>
+          <h1>🔬 SmartLab Equipment Manager</h1>
           <p className="subtitle">Cadmech Engineering Pvt. Ltd.</p>
         </div>
       </header>
 
-      <main className="app-main">
-        <section className="welcome-section">
-          <div className="welcome-card">
-            <h2>👋 Welcome, Developer!</h2>
-            <p>
-              This is your starting point. Replace this content with your
-              SmartLab Equipment Manager implementation.
-            </p>
+      <main className="app-main" style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px 16px' }}>
+        {errorMsg && (
+          <p style={{ background: '#fee2e2', color: '#991b1b', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px' }}>
+            {errorMsg}
+          </p>
+        )}
 
-            <div className="checklist">
-              <h3>📋 Feature Checklist</h3>
-              <ul>
-                <li>⬜ Dashboard with summary stats</li>
-                <li>⬜ Equipment list view</li>
-                <li>⬜ Add new equipment</li>
-                <li>⬜ Edit equipment</li>
-                <li>⬜ Delete equipment</li>
-                <li>⬜ Search &amp; Filter</li>
-                <li>⬜ Responsive design</li>
-              </ul>
-            </div>
+        <Dashboard />
 
-            <div className="api-status">
-              <h3>🔌 Backend API Status</h3>
-              <p>
-                Make sure your backend is running at{' '}
-                <code>http://localhost:5000</code>
-              </p>
-              <button
-                className="check-btn"
-                onClick={async () => {
-                  try {
-                    const res = await fetch(`${API_BASE}/health`)
-                    const data = await res.json()
-                    alert(`✅ Backend is running! Status: ${data.status}`)
-                  } catch (err) {
-                    alert('❌ Backend is not reachable. Make sure it is running on port 5000.')
-                  }
-                }}
-              >
-                Check Backend Connection
-              </button>
-            </div>
-          </div>
-        </section>
+        <SearchFilterBar
+          search={search} setSearch={setSearch}
+          status={status} setStatus={setStatus}
+          type={type} setType={setType}
+          types={types}
+          onAddClick={handleAddClick}
+        />
+
+        <EquipmentList items={items} loading={loading} onEdit={handleEditClick} onDelete={handleDelete} />
+
+        {showForm && (
+          <EquipmentForm
+            initialData={editingItem}
+            onSubmit={handleFormSubmit}
+            onClose={() => setShowForm(false)}
+          />
+        )}
       </main>
-
-      <footer className="app-footer">
-        <p>
-          CADMech Full Stack Assessment &copy; {new Date().getFullYear()} —
-          Cadmech Engineering Pvt. Ltd.
-        </p>
-      </footer>
     </div>
   )
 }

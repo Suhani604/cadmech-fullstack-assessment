@@ -1,138 +1,138 @@
-/**
- * SmartLab Equipment Manager — API Routes
- * CADMech Full Stack Assessment
- *
- * TODO: Implement all the routes below.
- *
- * Each route handler should:
- * 1. Validate input data
- * 2. Perform the database operation
- * 3. Return appropriate HTTP status codes
- * 4. Return meaningful error messages
- *
- * Refer to README.md for request/response examples.
- */
-
 const express = require('express');
 const router = express.Router();
+const { getDb } = require('../db/db');
 
-// ─── GET /api/equipment ────────────────────────────────────
-// List all equipment
-// Optional query params: ?search=keyword&type=CNC Machine&status=Active
+const VALID_TYPES = [
+  'CNC Machine',
+  'IoT Sensor',
+  'Automation Trainer',
+  'PLC Module',
+  'Hydraulic System',
+  'Pneumatic System',
+  'Electrical Panel',
+];
+
+const VALID_STATUSES = ['Active', 'Under Maintenance', 'Decommissioned'];
+
 router.get('/equipment', async (req, res) => {
   try {
-    // TODO: Implement — fetch all equipment from database
-    // Support search, type filter, and status filter via query params
-
-    // Example placeholder response (remove this and add your implementation):
-    res.json({
-      message: 'TODO: Implement GET /api/equipment',
-      query: req.query,
-      data: [],
-    });
+    const db = await getDb();
+    const { search, type, status } = req.query;
+    let query = 'SELECT * FROM equipment WHERE 1=1';
+    const params = [];
+    if (search) {
+      query += ' AND (name LIKE ? OR serial_number LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
+    }
+    if (type) { query += ' AND type = ?'; params.push(type); }
+    if (status) { query += ' AND status = ?'; params.push(status); }
+    query += ' ORDER BY created_at DESC';
+    const data = await db.all(query, params);
+    res.json({ data });
   } catch (error) {
     console.error('Error fetching equipment:', error);
     res.status(500).json({ error: 'Failed to fetch equipment' });
   }
 });
 
-// ─── GET /api/equipment/:id ────────────────────────────────
-// Get a single equipment item by ID
 router.get('/equipment/:id', async (req, res) => {
   try {
-    // TODO: Implement — fetch single equipment by req.params.id
-
-    res.json({
-      message: 'TODO: Implement GET /api/equipment/:id',
-      id: req.params.id,
-    });
+    const db = await getDb();
+    const item = await db.get('SELECT * FROM equipment WHERE id = ?', [req.params.id]);
+    if (!item) return res.status(404).json({ error: 'Not Found', message: 'Equipment not found' });
+    res.json(item);
   } catch (error) {
     console.error('Error fetching equipment:', error);
     res.status(500).json({ error: 'Failed to fetch equipment' });
   }
 });
 
-// ─── POST /api/equipment ───────────────────────────────────
-// Create new equipment
-// Required fields: name, type, status
-// Optional fields: location, serial_number, description, installed_date
 router.post('/equipment', async (req, res) => {
   try {
     const { name, type, status, location, serial_number, description, installed_date } = req.body;
-
-    // TODO: Validate required fields
     if (!name || !type || !status) {
-      return res.status(400).json({
-        error: 'Validation Error',
-        message: 'name, type, and status are required fields',
-      });
+      return res.status(400).json({ error: 'Validation Error', message: 'name, type, and status are required fields' });
     }
-
-    // TODO: Insert into database and return the created record
-
-    res.status(201).json({
-      message: 'TODO: Implement POST /api/equipment',
-      received: req.body,
-    });
+    if (!VALID_TYPES.includes(type)) {
+      return res.status(400).json({ error: 'Validation Error', message: `type must be one of: ${VALID_TYPES.join(', ')}` });
+    }
+    if (!VALID_STATUSES.includes(status)) {
+      return res.status(400).json({ error: 'Validation Error', message: `status must be one of: ${VALID_STATUSES.join(', ')}` });
+    }
+    const db = await getDb();
+    const result = await db.run(
+      `INSERT INTO equipment (name, type, status, location, serial_number, description, installed_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [name, type, status, location || null, serial_number || null, description || null, installed_date || null]
+    );
+    const created = await db.get('SELECT * FROM equipment WHERE id = ?', [result.lastID]);
+    res.status(201).json(created);
   } catch (error) {
     console.error('Error creating equipment:', error);
+    if (error.message && error.message.includes('UNIQUE')) {
+      return res.status(409).json({ error: 'Conflict', message: 'Serial number already exists' });
+    }
     res.status(500).json({ error: 'Failed to create equipment' });
   }
 });
 
-// ─── PUT /api/equipment/:id ────────────────────────────────
-// Update an existing equipment item
 router.put('/equipment/:id', async (req, res) => {
   try {
-    // TODO: Implement — update equipment by req.params.id with req.body
-
-    res.json({
-      message: 'TODO: Implement PUT /api/equipment/:id',
-      id: req.params.id,
-      updates: req.body,
-    });
+    const db = await getDb();
+    const existing = await db.get('SELECT * FROM equipment WHERE id = ?', [req.params.id]);
+    if (!existing) return res.status(404).json({ error: 'Not Found', message: 'Equipment not found' });
+    const { name, type, status, location, serial_number, description, installed_date } = req.body;
+    if (type && !VALID_TYPES.includes(type)) {
+      return res.status(400).json({ error: 'Validation Error', message: `type must be one of: ${VALID_TYPES.join(', ')}` });
+    }
+    if (status && !VALID_STATUSES.includes(status)) {
+      return res.status(400).json({ error: 'Validation Error', message: `status must be one of: ${VALID_STATUSES.join(', ')}` });
+    }
+    await db.run(
+      `UPDATE equipment SET name = ?, type = ?, status = ?, location = ?, serial_number = ?, description = ?, installed_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      [name ?? existing.name, type ?? existing.type, status ?? existing.status, location ?? existing.location, serial_number ?? existing.serial_number, description ?? existing.description, installed_date ?? existing.installed_date, req.params.id]
+    );
+    const updated = await db.get('SELECT * FROM equipment WHERE id = ?', [req.params.id]);
+    res.json(updated);
   } catch (error) {
     console.error('Error updating equipment:', error);
+    if (error.message && error.message.includes('UNIQUE')) {
+      return res.status(409).json({ error: 'Conflict', message: 'Serial number already exists' });
+    }
     res.status(500).json({ error: 'Failed to update equipment' });
   }
 });
 
-// ─── DELETE /api/equipment/:id ─────────────────────────────
-// Delete an equipment item
 router.delete('/equipment/:id', async (req, res) => {
   try {
-    // TODO: Implement — delete equipment by req.params.id
-
-    res.json({
-      message: 'TODO: Implement DELETE /api/equipment/:id',
-      id: req.params.id,
-    });
+    const db = await getDb();
+    const existing = await db.get('SELECT * FROM equipment WHERE id = ?', [req.params.id]);
+    if (!existing) return res.status(404).json({ error: 'Not Found', message: 'Equipment not found' });
+    await db.run('DELETE FROM equipment WHERE id = ?', [req.params.id]);
+    res.json({ message: 'Equipment deleted successfully' });
   } catch (error) {
     console.error('Error deleting equipment:', error);
     res.status(500).json({ error: 'Failed to delete equipment' });
   }
 });
 
-// ─── GET /api/stats ────────────────────────────────────────
-// Get dashboard statistics
-// Should return: total count, active count, maintenance count, decommissioned count
 router.get('/stats', async (req, res) => {
   try {
-    // TODO: Implement — query database for counts by status
-
-    res.json({
-      message: 'TODO: Implement GET /api/stats',
-      stats: {
-        total: 0,
-        active: 0,
-        underMaintenance: 0,
-        decommissioned: 0,
-      },
-    });
+    const db = await getDb();
+    const { total } = await db.get('SELECT COUNT(*) AS total FROM equipment');
+    const { active } = await db.get("SELECT COUNT(*) AS active FROM equipment WHERE status = 'Active'");
+    const { underMaintenance } = await db.get("SELECT COUNT(*) AS underMaintenance FROM equipment WHERE status = 'Under Maintenance'");
+    const { decommissioned } = await db.get("SELECT COUNT(*) AS decommissioned FROM equipment WHERE status = 'Decommissioned'");
+    const byType = await db.all('SELECT type, COUNT(*) AS count FROM equipment GROUP BY type ORDER BY count DESC');
+    res.json({ stats: { total, active, underMaintenance, decommissioned }, byType });
   } catch (error) {
     console.error('Error fetching stats:', error);
     res.status(500).json({ error: 'Failed to fetch statistics' });
   }
+});
+
+router.get('/types', (req, res) => {
+  res.json({ types: VALID_TYPES });
 });
 
 module.exports = router;
