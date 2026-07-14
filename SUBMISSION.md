@@ -8,12 +8,12 @@
 
 | Field | Your Details |
 |-------|-------------|
-| **Full Name** | |
-| **Email** | |
-| **Phone** | |
-| **GitHub Username** | |
-| **LinkedIn (optional)** | |
-| **Current Location** | |
+| **Full Name** | Suhani Sanjiv Junghare |
+| **Email** | jungharesuhani6@gmail.com |
+| **Phone** |9960143310 |
+| **GitHub Username** | https://github.com/Suhani604|
+| **LinkedIn (optional)** | www.linkedin.com/in/suhani-junghare-875a79300 |
+| **Current Location** | Amravati |
 
 ---
 
@@ -21,9 +21,9 @@
 
 | Link | URL |
 |------|-----|
-| **GitHub Repo** (forked) | `https://github.com/YOUR-USERNAME/cadmech-fullstack-assessment` |
-| **Live Frontend** (GitHub Pages) | `https://YOUR-USERNAME.github.io/cadmech-fullstack-assessment` |
-| **Live Backend** (Render/Railway) | `https://your-backend-url.onrender.com` |
+| **GitHub Repo** (forked) | `https://github.com/Suhani604/cadmech-fullstack-assessment` |
+| **Live Frontend** (GitHub Pages) | ` https://Suhani604.github.io/cadmech-fullstack-assessment/` |
+| **Live Backend** (Render/Railway) | `https://cadmech-fullstack-assessment-dlyi.onrender.com ` |
 
 ---
 
@@ -31,28 +31,28 @@
 
 | Choice | Your Answer |
 |--------|------------|
-| **Database Used** | MySQL / PostgreSQL / SQLite *(pick one)* |
-| **ORM / Query Builder** | *(e.g., Sequelize, Knex, raw SQL)* |
-| **Additional Frontend Libraries** | *(list all)* |
-| **Additional Backend Libraries** | *(list all)* |
-| **CSS Approach** | *(e.g., Vanilla CSS, CSS Modules, Tailwind)* |
+| **Database Used** |  SQLite |
+| **ORM / Query Builder** | Raw SQL via the `sqlite` + `sqlite3` npm packages|
+| **Additional Frontend Libraries** | None — plain React with fetch API |
+| **Additional Backend Libraries** | `sqlite`, `sqlite3`, `cors`, `dotenv`|
+| **CSS Approach** |  Inline styles (JS style objects) with a CSS media query for mobile responsiveness | |
 
 ---
 
 ## ✅ Features Implemented
 
-- [ ] Dashboard with summary statistics
-- [ ] Equipment list view (table/grid)
-- [ ] Add new equipment with validation
-- [ ] Edit existing equipment
-- [ ] Delete equipment with confirmation dialog
-- [ ] Search by name
-- [ ] Filter by type and/or status
-- [ ] Responsive design (desktop + mobile)
-- [ ] REST API with proper error handling
-- [ ] Database with schema
-- [ ] Frontend deployed to GitHub Pages
-- [ ] Backend deployed to Render/Railway
+- [x] Dashboard with summary statistics
+- [x] Equipment list view (table/grid)
+- [x] Add new equipment with validation
+- [x] Edit existing equipment
+- [x] Delete equipment with confirmation dialog
+- [x] Search by name
+- [x] Filter by type and/or status
+- [x] Responsive design (desktop + mobile)
+- [x] REST API with proper error handling
+- [x] Database with schema
+- [x] Frontend deployed to GitHub Pages
+- [x] Backend deployed to Render/Railway
 
 ---
 
@@ -60,19 +60,19 @@
 
 ### What went well?
 
-> *(2–3 sentences about what you're proud of)*
+> I was able to build a clean, working full-stack CRUD application with a dashboard, search/filter, and a responsive UI that adapts from desktop tables to mobile cards. The API validates input against the fixed equipment types and status values defined in the schema, and returns clear error messages.
 
 ### What was the hardest part?
 
-> *(2–3 sentences — be specific. What got you stuck? How did you push through?)*
+> Matching the data fields exactly with the schema was tricky — fields like serial_number and installed_date, and making sure the frontend only sent the exact type and status values the backend allowed. I also had to make sure the backend used CommonJS (require/module.exports) since that's what the starter code used, not ES modules.
 
 ### What would you do differently with more time?
 
-> *(2–3 sentences about improvements, refactors, or features you'd add)*
+>  I would add pagination and sorting to the equipment list, and a proper reports page showing equipment breakdown by status and type. I'd also add better loading indicators instead of plain "Loading..." text, and write some basic tests for the API endpoints.
 
 ### AI Tools Usage
 
-> *(Which tools did you use? For what tasks? What did you learn vs. what did AI generate?)*
+> I used Claude to help me write the backend routes, SQLite database connection, and the React components (Dashboard, EquipmentForm, EquipmentList, SearchFilterBar). I tested every feature myself in the browser, fixed the field names to match the schema, and debugged issues where the frontend and backend weren't talking to each other correctly.
 
 ---
 
@@ -80,21 +80,21 @@
 
 | Area | Hours |
 |------|-------|
-| **Frontend UI/UX & Responsive Design** | |
-| **Backend API Development & DB** | |
-| **Deployment (FE + BE)** | |
-| **Documentation & Cleanup** | |
-| **Total** | |
+| **Frontend UI/UX & Responsive Design** | 4|
+| **Backend API Development & DB** |3 |
+| **Deployment (FE + BE)** | 2|
+| **Documentation & Cleanup** | 1|
+| **Total** | 10 |
 
 ---
 
 ## 📌 Additional Notes
 
-> *(Known issues, design trade-offs, things you'd like the evaluator to know)*
+> Render's free tier spins down after 15 minutes of inactivity, so the first request to the live backend may take 30–60 seconds to respond. This is expected behavior on the free tier.
 
 ---
 
 > **⚠️ Checklist before submitting:**
-> - [ ] All links are working and publicly accessible
-> - [ ] Code is pushed to your forked repo
-> - [ ] Commit history shows progressive development
+> - [x] All links are working and publicly accessible
+> - [x] Code is pushed to your forked repo
+> - [x] Commit history shows progressive development
